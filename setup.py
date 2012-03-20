@@ -6,7 +6,7 @@ setup(
     description="a asynchron mail agent",
     author='Marcel Eyer',
     author_email='marcel.eyer@iterativ.ch',
-    url='https://github.com/iterativ/django-deliverer',
-    packages=['django-deliverer'],
+    url='https://github.com/iterativ/djdeliverer',
+    packages=['djdeliverer'],
     zip_safe=False,
 )
