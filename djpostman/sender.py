@@ -26,13 +26,13 @@ from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives
 from django.utils.encoding import force_unicode
-#from mailer import send_mail, PRIORITY_MAPPING
-#from mailer.models import make_message
 import logging
 from django.template.loader import render_to_string
 from django.contrib.sites.models import Site
 from html2text import HTML2Text
 from djangojames.string import strip_tags, strip_empty_tags
+from djpostman.models import Message
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -48,42 +48,51 @@ logger = logging.getLogger(__name__)
 
 def render_to_send_multi_mail(subject, template, context, recipient_list, 
                     from_email=settings.EMAIL_HOST_USER, 
-                    priority="medium"):
+                    store=True):
 
     context['current_site'] = Site.objects.get_current()
     context['current_domain'] = getattr(settings, 'PROTOCOL', 'http://')+Site.objects.get_current().domain
         
     content = render_to_string(template, context)
-    return send_multi_mail(subject, content, recipient_list, from_email, priority)
+    return send_multi_mail(subject, content, recipient_list, from_email, store)
 
 def send_multi_mail(subject, content, recipient_list, 
                     from_email=settings.EMAIL_HOST_USER, 
-                    priority="medium"):
+                    store=True):
 
     if not isinstance(recipient_list, list): 
         recipient_list = [recipient_list]
-            
-    #priority = PRIORITY_MAPPING[priority]
+    
+    if len(recipient_list) == 0:
+        return 0
+        
+    if store:
+        msg = Message()
+        msg.subject = force_unicode(subject)
+        msg.save()
+
+    # any user?
+    recipient_list_str = []
+    
+    for recipient in recipient_list:
+        if isinstance(recipient, User):
+            if store: msg.users.add(recipient)
+            recipient_list_str.append(recipient.email)
+        else:
+            recipient_list_str.append(recipient)
     
     h = HTML2Text()
     h.ignore_images = True
     h.ignore_emphasis = True
     
-    """
-    msg = make_message(subject=force_unicode(subject),
-                       body=force_unicode(h.handle(strip_empty_tags(strip_tags(content, ['img', 'script', 'span'])))),
-                       from_email=from_email,
-                       to=recipient_list,
-                       priority=priority)
-    """
     #email = msg.email
     email = EmailMultiAlternatives(force_unicode(subject), 
                                    force_unicode(h.handle(strip_empty_tags(strip_tags(content, ['img', 'script', 'span'])))), 
                                    from_email, 
-                                   recipient_list)
+                                   recipient_list_str)
     email.attach_alternative(content, "text/html")
-
-    #msg.email = email
-    #msg.save()
+    if store: 
+        msg.email = email
+        msg.save()
     email.send()
     return 1

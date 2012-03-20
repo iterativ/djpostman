@@ -1,0 +1,33 @@
+{% extends "admin/change_form.html" %} 
+{% load i18n %}
+
+{% block content %}
+	{{ block.super }}
+	<h1>{% trans "Original" %}</h1>
+	<div class="form-row">
+		<label class="required">{% trans "Subject" %}:</label> {{original.subject}}
+	</div>
+
+	<div class="form-row">
+		<label class="required">{% trans "Users" %}:</label> {{original.users.all|join:', ' }}
+		</div>
+
+	{% with original.email as email %}
+		<div class="form-row">
+			<label class="required">{% trans "Email To" %}:</label> {{email.to|join:', ' }}
+		</div>
+		{% if email.alternatives %}
+		<div class="form-row">
+			{% for alt in email.alternatives %}
+				{{alt.0}}
+			{% endfor %}
+		</div>
+		{% endif %}
+		<h2>{% trans "Body Text" %}</h2>
+			<pre>
+				{{email.body}}
+			</pre>
+		</div>		
+	{% endwith %}
+	
+{% endblock %}

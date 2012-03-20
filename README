@@ -1,7 +1,4 @@
 Required Packages
 =================
 -e git://github.com/aaronsw/html2text#egg=html2text
-
-Optional Packages
-=================
-django-mailer==0.2a1
+django-extensions
