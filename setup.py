@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(
-    name='django-deliverer',
+    name='djdeliverer',
     version='0.2',
     description="a asynchron mail agent",
     author='Marcel Eyer',
