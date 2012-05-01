@@ -1,4 +1,28 @@
-from distutils.core import setup
+from setuptools import setup
+import os
+
+packages = []
+data_files = []
+root_dir = 'djpostman'
+
+def fullsplit(path, result=None):
+    if result is None:
+        result = []
+    head, tail = os.path.split(path)
+    if head == '':
+        return [tail] + result
+    if head == path:
+        return result
+    return fullsplit(head, [tail] + result)
+
+for dirpath, dirnames, filenames in os.walk(root_dir):
+    # Ignore dirnames that start with '.'
+    for i, dirname in enumerate(dirnames):
+        if dirname.startswith('.'): del dirnames[i]
+    if '__init__.py' in filenames:
+        packages.append('.'.join(fullsplit(dirpath)))
+    elif filenames:
+        data_files.append([dirpath, [os.path.join(dirpath, f) for f in filenames]])
 
 setup(
     name='djpostman',
@@ -7,6 +31,7 @@ setup(
     author='Marcel Eyer',
     author_email='marcel.eyer@iterativ.ch',
     url='https://github.com/iterativ/djpostman',
-    packages=['djpostman'],
+    packages=packages,
+    data_files=data_files,
     zip_safe=False,
 )
