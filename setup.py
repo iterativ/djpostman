@@ -1,3 +1,4 @@
+"""
 from distutils.core import setup
 import os
 from distutils.command.install_data import install_data
@@ -35,6 +36,9 @@ for dirpath, dirnames, filenames in os.walk(root_dir):
 # http://groups.google.com/group/comp.lang.python/browse_thread/thread/35ec7b2fed36eaec/2105ee4d9e8042cb
 for scheme in INSTALL_SCHEMES.values():
     scheme['data'] = scheme['purelib']
+"""
+
+from setuptools import setup, find_packages
 
 setup(
     name='djpostman',
@@ -43,7 +47,7 @@ setup(
     author='Marcel Eyer',
     author_email='marcel.eyer@iterativ.ch',
     url='https://github.com/iterativ/djpostman',
-    packages=packages,
-    data_files=data_files,
+    packages=find_packages(),
+    include_package_data = True,
     zip_safe=False,
 )
