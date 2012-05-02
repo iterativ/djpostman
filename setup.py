@@ -45,4 +45,11 @@ setup(
     packages=packages,
     data_files=data_files,
     zip_safe=False,
+    install_requires=[
+        'django-extensions',
+        'html2text==3.200.3',
+    ],
+    dependency_links = [
+        'http://github.com/aaronsw/html2text/tarball/master#egg=html2text-3.200.3'
+    ]
 )
