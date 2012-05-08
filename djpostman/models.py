@@ -39,10 +39,10 @@ class Message(TimeStampedModel):
     recipients = models.ManyToManyField('auth.User', related_name='user_messages', null=True, blank=True)
     
     subject= models.TextField()
-    hash_value = models.CharField(max_length=255, null=True, blank=True)
+    hash_value = models.CharField(max_length=255, null=True, blank=True, editable=False)
     
     # The actual data - a pickled EmailMessage
-    message_data = models.TextField(null=True, blank=True)
+    message_data = models.TextField(null=True, blank=True, editable=False)
     
     def _get_email(self):
         return _unpickle_email(self.message_data)

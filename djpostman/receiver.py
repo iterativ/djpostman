@@ -22,6 +22,7 @@
 # Created on May 7, 2012
 # @author: maersu <me@maersu.ch>
 
+# See:
 # https://github.com/rossp/django-helpdesk/blob/e8ee39ddaad9b85bd935c651491ab172eba00a79/helpdesk/management/commands/get_email.py
 # http://stackoverflow.com/questions/730573/django-to-send-and-receive-email
 
@@ -149,7 +150,7 @@ class BaseMailReceiver(object):
         self.msg_klass=msg_klass
 
     def fetch_mail(self):
-        self.old_hash_valuesv = Message.objects.filter(created__gte=self.since_date).values_list('hash_value', flat=True)
+        self.old_hash_values = Message.objects.filter(created__gte=self.since_date).values_list('hash_value', flat=True)
         
     def get_hash(self, message):
         hash_value = hashlib.md5()
