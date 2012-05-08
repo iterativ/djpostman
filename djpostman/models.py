@@ -35,8 +35,11 @@ def _unpickle_email(data):
 
 class Message(TimeStampedModel):
     
-    users = models.ManyToManyField('auth.User', related_name='user_messages', null=True, blank=True)
+    sender = models.ForeignKey('auth.User', null=True, blank=True)
+    recipients = models.ManyToManyField('auth.User', related_name='user_messages', null=True, blank=True)
+    
     subject= models.TextField()
+    hash_value = models.CharField(max_length=255, null=True, blank=True)
     
     # The actual data - a pickled EmailMessage
     message_data = models.TextField(null=True, blank=True)
@@ -47,4 +50,7 @@ class Message(TimeStampedModel):
     def _set_email(self, val):
         self.message_data = _pickle_email(val)
 
-    email = property(_get_email, _set_email)    
+    email = property(_get_email, _set_email)
+    
+    def __unicode__(self):
+        return '%s' %  self.subject
