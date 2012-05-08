@@ -23,7 +23,6 @@
 # @author: github.com/maersu
 
 from django.conf import settings
-from django.core import mail
 from django.core.mail import EmailMultiAlternatives
 from django.utils.encoding import force_unicode
 import logging
@@ -33,6 +32,7 @@ from html2text import HTML2Text
 from djangojames.string import strip_tags, strip_empty_tags
 from djpostman.models import Message
 from django.contrib.auth.models import User
+from djpostman.task import send_mail_task
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def send_multi_mail(subject, content, recipient_list,
     
     for recipient in recipient_list:
         if isinstance(recipient, User):
-            if store: msg.users.add(recipient)
+            if store: msg.recipients.add(recipient)
             recipient_list_str.append(recipient.email)
         else:
             recipient_list_str.append(recipient)
@@ -94,5 +94,7 @@ def send_multi_mail(subject, content, recipient_list,
     if store: 
         msg.email = email
         msg.save()
-    email.send()
+    
+    send_mail_task.delay(email)
+    
     return 1
