@@ -144,12 +144,12 @@ class BaseMailReceiver(object):
         return hash_value.hexdigest()        
 
 class ImapConfig(object):
-    email_box_pass = settings.EMAIL_BOX_HOST_PASSWORD
-    email_box_user = settings.EMAIL_BOX_HOST_USER
-    email_box_port = settings.EMAIL_BOX_PORT
-    email_box_host = settings.EMAIL_BOX_HOST
-    email_box_ssl = settings.EMAIL_BOX_USE_SSL
-    email_box_imap_folder = settings.EMAIL_BOX_IMAP_FOLDER
+    email_box_pass = getattr(settings, 'EMAIL_BOX_HOST_PASSWORD', '')
+    email_box_user = getattr(settings, 'EMAIL_BOX_HOST_USER', '')
+    email_box_port = getattr(settings, 'EMAIL_BOX_PORT', '')
+    email_box_host = getattr(settings, 'EMAIL_BOX_HOST', '')
+    email_box_ssl = getattr(settings, 'EMAIL_BOX_USE_SSL', '')
+    email_box_imap_folder = getattr(settings, 'EMAIL_BOX_IMAP_FOLDER', '')
     
 class ImapMailReceiver(BaseMailReceiver):
  
