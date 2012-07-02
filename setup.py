@@ -47,7 +47,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'django-extensions',
-        'html2text==3.200.3'
+        'html2text==3.200.3',
         'Celery',
         'django-celery',
     ],
