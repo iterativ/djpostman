@@ -32,8 +32,10 @@ logger = logging.getLogger(__name__)
 #
 # message.attach_file('/images/weather_map.png')
 
+from_email = getattr(settings, 'FROM_EMAIL', settings.EMAIL_HOST_USER)
+
 def render_to_send_multi_mail(subject, template, context, recipient_list, 
-                    from_email=settings.EMAIL_HOST_USER, 
+                    from_email=from_email, 
                     store=True):
 
     context['current_site'] = Site.objects.get_current()
@@ -43,7 +45,7 @@ def render_to_send_multi_mail(subject, template, context, recipient_list,
     return send_multi_mail(subject, content, recipient_list, from_email, store)
 
 def send_multi_mail(subject, content, recipient_list, 
-                    from_email=settings.EMAIL_HOST_USER, 
+                    from_email=from_email, 
                     store=True):
 
     if not isinstance(recipient_list, list): 
@@ -80,7 +82,7 @@ def send_multi_mail(subject, content, recipient_list,
         msg.email = email
         msg.save()
     
-    if 'djcelery' in settings.INSTALLED_APPS:
+    if 'djcelery' in settings.INSTALLED_APPS and hasattr(settings, 'BROKER_URL'):
         try:
             send_mail_task.delay(email)
         except:
