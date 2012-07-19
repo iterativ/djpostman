@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %} 
+{% block title %}{% trans "Email senden" %}{% endblock %}
+
+{% block bodyclass %}change-form{% endblock %}
+{% block extrastyle %}
+	{{ block.super }}<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}admin/css/forms.css" />
+{% endblock %}
+
+
+{% block content %}
+<div id="content-main">
+	<h1>{% trans "Email senden" %}</h1>
+	<form action="." method="post" id="send_form">{% csrf_token %}
+		<div>
+			{% if form.errors %}
+			    <p class="errornote">
+			    {% trans "Bitte die aufgeführten Fehler korrigieren. " %}
+			    </p>
+			{% endif %}
+			<fieldset class="module aligned ">
+			{% for f in form %}
+				<div class="form-row field-site {% if f.errors %} errors{% endif %}">
+					{{ f.errors }}
+		            <div>
+		            	<label class="{%if field.field.required %} required{% endif %}" for="id_{{ field.html_name }}">
+							{{ f.label }}
+						</label>
+		            	{{ f }}
+		            	
+		            	{% if f.help_text %}
+							<p class="help">{{ f.help_text}}</p>
+						{% endif %}
+		            </div>
+		        </div>
+			{% endfor %}
+			</fieldset>
+			<div class="submit-row">
+				<input type="submit" name="_save" class="default" value="{% trans "Senden" %}">
+			</div>
+		</div>
+	</form>
+</div>
+{% endblock %}

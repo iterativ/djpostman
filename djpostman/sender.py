@@ -81,7 +81,11 @@ def send_multi_mail(subject, content, recipient_list,
         msg.save()
     
     if 'djcelery' in settings.INSTALLED_APPS:
-        send_mail_task.delay(email)
+        try:
+            send_mail_task.delay(email)
+        except:
+            logger.exception('Could not use djcelery. Try fallback.')
+            send_mail_task(email)
     else:
         send_mail_task(email)
     
