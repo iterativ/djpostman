@@ -1,0 +1,34 @@
+{% extends "admin/change_form.html" %} 
+{% load i18n %}
+
+{% block content_title %}<h1>{% trans "Original" %}</h1>{% endblock %}
+
+{% block content %}
+	<div class="module aligned"> 
+		<div class="form-row">
+			<label class="required">{% trans "Subject" %}:</label> {{original.subject}}
+		</div>
+	
+		<div class="form-row">
+			<label class="required">{% trans "Users" %}:</label> {{original.users.all|join:', ' }}
+		</div>
+	
+		{% with original.email as email %}
+			<div class="form-row">
+				<label class="required">{% trans "Email To" %}:</label> {{email.to|join:', ' }}
+			</div>
+			{% if alternatives %}
+			<div class="form-row">
+				{% for alt in alternatives %}
+					{{alt|safe}}
+				{% endfor %}
+			</div>
+			{% endif %}
+			<div class="form-row">
+				<pre>{{email.body}}</pre>
+			</div>		
+		{% endwith %}
+	</div>
+	{% if title %}<h1>{{ title }}</h1>{% endif %}
+	{{ block.super }}
+{% endblock %}

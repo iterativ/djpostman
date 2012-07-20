@@ -12,9 +12,11 @@
     {% block content %}
 
     {% endblock %}
+    {% block greeting %}
 	<p>
 		{% trans "Freundliche Grüsse" %}<br>
 		{{ current_site.name }}-Team
 	</p>
+	{% endblock %}
 </body>
 </html>

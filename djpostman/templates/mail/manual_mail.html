@@ -1,0 +1,15 @@
+{% extends "mail/base.html" %}
+{% load markup %}
+
+{% block content %}
+	{{text|textile}}
+{% endblock %}
+
+{% if use_greeting %}
+	{% block greeting %}
+	<p>
+		{% trans "Freundliche Grüsse" %}<br>
+		{{ user }}
+	</p>
+	{% endblock %}
+{% endif %}
