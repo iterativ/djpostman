@@ -5,11 +5,11 @@
 	{{text|textile}}
 {% endblock %}
 
-{% if use_greeting %}
-	{% block greeting %}
-	<p>
-		{% trans "Freundliche Grüsse" %}<br>
-		{{ user }}
-	</p>
-	{% endblock %}
-{% endif %}
+{% block greeting %}
+	{% if use_greeting %}
+		<p>
+			{% trans "Freundliche Grüsse" %}<br>
+			{{ user }}
+		</p>
+	{% endif %}
+{% endblock %}

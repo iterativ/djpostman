@@ -25,9 +25,9 @@ class MessageForm(BaseModelForm):
     text = forms.CharField(widget=forms.Textarea(attrs={'cols': 60, "rows": 15}), 
                            help_text=TEXTILE_HELP)
     use_greeting = forms.BooleanField(label=_('Grussformel'), 
-                                   required=False, 
-                                   initial=True,
-                                    help_text=_(u"Standart Grussformel verwenden"))
+                                      required=False, 
+                                      initial=True,
+                                      help_text=_(u"Standart Grussformel verwenden"))
     
     def clean_recipients_email(self):
         data = self.cleaned_data['recipients_email'].strip()

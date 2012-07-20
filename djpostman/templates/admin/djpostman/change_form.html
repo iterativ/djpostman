@@ -4,7 +4,7 @@
 {% block content_title %}<h1>{% trans "Original" %}</h1>{% endblock %}
 
 {% block content %}
-	<div class="module aligned"> 
+	<div style="border: 1px solid #CCCCCC; margin-bottom: 10px;"> 
 		<div class="form-row">
 			<label class="required">{% trans "Subject" %}:</label> {{original.subject}}
 		</div>
@@ -18,13 +18,13 @@
 				<label class="required">{% trans "Email To" %}:</label> {{email.to|join:', ' }}
 			</div>
 			{% if alternatives %}
-			<div class="form-row">
+			<div class="form-row" style="padding: 25px;">
 				{% for alt in alternatives %}
 					{{alt|safe}}
 				{% endfor %}
 			</div>
 			{% endif %}
-			<div class="form-row">
+			<div class="form-row" style="padding: 25px;">
 				<pre>{{email.body}}</pre>
 			</div>		
 		{% endwith %}
