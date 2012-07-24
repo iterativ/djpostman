@@ -58,7 +58,7 @@ def send_multi_mail(subject, content, recipient_list,
         msg = Message()
         msg.subject = force_unicode(subject)
         msg.save()
-
+    # @todo check if a email belongs to an exitsing user -> store in recipient_list_str
     # any user?
     recipient_list_str = []
     
