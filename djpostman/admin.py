@@ -64,7 +64,7 @@ class MessageAdmin(admin.ModelAdmin):
                                           recipient_list=recipient_list)
                 
                 messages.success(request, _(u"Das Email '%s' wurde an '%s' versendet" % (subject, ','.join(recipient_list))))
-                return redirect('/admin/djpostman/message/send/')
+                return redirect('/admin/djpostman/message/')
         else:
             form = MessageForm()
         return TemplateResponse(request, 'admin/djpostman/sendmail_form.html', {'form': form})
