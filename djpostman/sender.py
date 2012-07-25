@@ -58,15 +58,20 @@ def send_multi_mail(subject, content, recipient_list,
         msg = Message()
         msg.subject = force_unicode(subject)
         msg.save()
-    # @todo check if a email belongs to an exitsing user -> store in recipient_list_str
-    # any user?
+        for u in User.objects.filter(email=from_email):
+            msg.sender = u
+        
     recipient_list_str = []
     
     for recipient in recipient_list:
         if isinstance(recipient, User):
-            if store: msg.recipients.add(recipient)
+            if store: 
+                msg.recipients.add(recipient)
             recipient_list_str.append(recipient.email)
         else:
+            if store: 
+                for u in User.objects.filter(email=recipient):
+                    msg.recipients.add(u)
             recipient_list_str.append(recipient)
     
     h = HTML2Text()
@@ -81,6 +86,10 @@ def send_multi_mail(subject, content, recipient_list,
     if store: 
         msg.email = email
         msg.save()
+    
+    if getattr(settings, 'DJPOSTMAN_NO_EMAIL', False):
+        logger.info('No mail sent: settings.DJPOSTMAN_NO_EMAIL is True')
+        return 0
     
     if 'djcelery' in settings.INSTALLED_APPS and hasattr(settings, 'BROKER_URL'):
         try:

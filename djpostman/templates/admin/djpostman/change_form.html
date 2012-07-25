@@ -10,13 +10,23 @@
 		</div>
 	
 		<div class="form-row">
-			<label class="required">{% trans "Users" %}:</label> {{original.users.all|join:', ' }}
+			<label class="required">{% trans "Recipients Users" %}:</label> {{original.recipients.all|join:', ' }}
 		</div>
 	
 		{% with original.email as email %}
 			<div class="form-row">
 				<label class="required">{% trans "Email To" %}:</label> {{email.to|join:', ' }}
 			</div>
+			
+			<div class="form-row">
+				<label class="required">{% trans "Email from" %}:</label> 
+				{% if original.sender %}
+					 {{original.sender }}
+				{% else %}
+					{{email.from_email }}
+				{% endif %}
+			</div>
+			
 			{% if alternatives %}
 			<div class="form-row" style="padding: 25px;">
 				{% for alt in alternatives %}
