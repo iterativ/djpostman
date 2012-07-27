@@ -7,6 +7,7 @@ Features:
 * Store sent email in database (match auth.User)
 * Recevice and store email from a mail account (via imap, match auth.User)
 * Send mail inside Django Admin
+* Easy to use multi alternatives email rendering
 
 h2. Required packages
 
