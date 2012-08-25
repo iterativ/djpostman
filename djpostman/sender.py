@@ -53,7 +53,9 @@ def send_multi_mail(subject, content, recipient_list,
     
     if len(recipient_list) == 0:
         return 0
-        
+    
+    recipient_list = list(set(recipient_list))
+    
     if store:
         msg = Message()
         msg.subject = force_unicode(subject)
