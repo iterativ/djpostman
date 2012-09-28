@@ -21,11 +21,15 @@ from email.Utils import parseaddr, collapse_rfc2231_value, parsedate_tz, getaddr
 import datetime
 from datetime import date, timedelta
 import hashlib
-from djpostman.models import Message
+from djpostman.models import Message, Contact
 from django.core.mail import EmailMultiAlternatives
 from djangojames.string import strip_tags, strip_empty_tags
 from django.utils.safestring import mark_safe
 from django.contrib.auth.models import User
+
+class MailRecieverError(Exception):
+    """Base class for exceptions in this module."""
+    pass
 
 def decodeUnknown(charset, string):
     if not charset:
@@ -41,8 +45,9 @@ def decode_mail_headers(string):
 
 class ServerMessage(object):
     
-    def __init__(self, message, hash_value):
-        self.hash_value = hash_value        
+    def __init__(self, message, hash_value, uid):
+        self.hash_value = hash_value
+        self.uid =  uid 
         message = email.message_from_string(message)
 
         def _get_header_data(key):
@@ -104,10 +109,43 @@ class ServerMessage(object):
     def get_recipients(self, recipients):
         return User.objects.filter(email__in=[r[1] for r in recipients])
     
-    def save(self):
+    def get_or_create_contact(self, contact_email):
+        name, email = contact_email
+        email=email.lower()
+        defaults={}
+        if not name:
+            name = email.split('@')[0].replace('.', ' ').title()    
+        names = name.split(' ')
+        
+        if len(names) > 1:
+            defaults['first_name'] = names[0]
+            defaults['last_name'] = ' '.join(names[1:])
+        else:
+            defaults['last_name'] = names[0]
+        
+        try:
+            contact = Contact.objects.get(email__iexact=email)
+        except Contact.DoesNotExist:
+            contact = Contact(email=email)
+            contact.save()
+        
+        if not contact.user and User.objects.filter(email__iexact=email).exists():
+            contact.user = User.objects.get(email__iexact=email)
+            contact.save()
+        
+        if not contact.first_name and 'first_name' in defaults:
+            contact.first_name = defaults.get('first_name')
+        if not contact.last_name and 'last_name' in defaults:
+            contact.last_name = defaults.get('last_name')
+        contact.save()
+
+        return contact    
+    
+    def save(self):            
         new_message = Message()
         new_message.subject = self.subject
         new_message.hash_value = self.hash_value
+        new_message.uid = self.uid
         new_message.sender = self.get_sender(self.sender)
         
         store_email = EmailMultiAlternatives(new_message.subject, 
@@ -118,10 +156,14 @@ class ServerMessage(object):
         if self.body_html:
             store_email.attach_alternative(self.body_html, "text/html")
         new_message.email = store_email
-        new_message.save()
+        new_message.save()        
         new_message.recipients = self.get_recipients(self.recipients)
         new_message.created = self.received
         new_message.save()
+
+        self.get_or_create_contact(self.sender).emails_sent.add(new_message)
+        for rec in self.recipients:
+            self.get_or_create_contact(rec).emails_received.add(new_message)
 
 class BaseMailReceiver(object):
     
@@ -136,7 +178,7 @@ class BaseMailReceiver(object):
         self.msg_klass=msg_klass
 
     def fetch_mail(self):
-        self.old_hash_values = Message.objects.filter(created__gte=self.since_date).values_list('hash_value', flat=True)
+        self.old_hash_values = list(Message.objects.filter(created__gte=self.since_date).values_list('hash_value', flat=True))
         
     def get_hash(self, message):
         hash_value = hashlib.md5()
@@ -144,12 +186,16 @@ class BaseMailReceiver(object):
         return hash_value.hexdigest()        
 
 class ImapConfig(object):
-    email_box_pass = getattr(settings, 'EMAIL_BOX_HOST_PASSWORD', '')
-    email_box_user = getattr(settings, 'EMAIL_BOX_HOST_USER', '')
-    email_box_port = getattr(settings, 'EMAIL_BOX_PORT', '')
-    email_box_host = getattr(settings, 'EMAIL_BOX_HOST', '')
-    email_box_ssl = getattr(settings, 'EMAIL_BOX_USE_SSL', '')
-    email_box_imap_folder = getattr(settings, 'EMAIL_BOX_IMAP_FOLDER', '')
+    password = getattr(settings, 'EMAIL_BOX_HOST_PASSWORD', '')
+    user = getattr(settings, 'EMAIL_BOX_HOST_USER', '')
+    port = getattr(settings, 'EMAIL_BOX_PORT', '')
+    host = getattr(settings, 'EMAIL_BOX_HOST', '')
+    use_ssl = getattr(settings, 'EMAIL_BOX_USE_SSL', '')
+    imap_folders = getattr(settings, 'EMAIL_BOX_IMAP_FOLDER', '')
+    
+    def __str__(self):
+        return '%s - %s - %s' %  (self.user, self.host, self.imap_folders)
+    
     
 class ImapMailReceiver(BaseMailReceiver):
  
@@ -159,34 +205,64 @@ class ImapMailReceiver(BaseMailReceiver):
             self.mb_config = ImapConfig()
         else:
             self.mb_config = config
-            
-    def fetch_mail(self):
-        super(ImapMailReceiver, self).fetch_mail()
-             
-        mb = self.mb_config
-        if mb.email_box_ssl:
-            if not mb.email_box_port: mb.email_box_port = 993
-            server = imaplib.IMAP4_SSL(mb.email_box_host, int(mb.email_box_port))
-        else:
-            if not mb.email_box_port: mb.email_box_port = 143
-            server = imaplib.IMAP4(mb.email_box_host, int(mb.email_box_port))
-        server.login(mb.email_box_user, mb.email_box_pass)
-        server.select(mb.email_box_imap_folder)
         
-        status, data = server.search(None, '(SINCE "%s")' % self.since_date.strftime("%d-%b-%Y"))
-        counter = 0
-        for num in data[0].split():
-            status, data = server.fetch(num, '(RFC822)')
-            full_message = data[0][1]
+        self.boxes = self.mb_config.imap_folders.split(',')
+        self.messages = []
+    
+    def get_connection(self):
+        return self.mb_config
+    
+    def connect(self):
+        mb = self.mb_config
+        if mb.use_ssl:
+            if not mb.port: mb.port = 993
+            self.server = imaplib.IMAP4_SSL(mb.host, int(mb.port))
+        else:
+            if not mb.port: mb.port = 143
+            self.server = imaplib.IMAP4(mb.host, int(mb.port))
+            
+        self.server.login(mb.user, mb.password)
+    
+    def disconnect(self):
+        try:
+            self.server.expunge()
+            self.server.close()
+        except:
+            pass
+        self.server.logout()          
 
-            hash_value = self.get_hash(full_message)
-            if hash_value not in self.old_hash_values:
-                m = self.msg_klass(full_message, hash_value)
-                m.save()
-                counter += 1
-            # mark as read
-            #server.store(num, '+FLAGS', '\\Deleted')
-        server.expunge()
-        server.close()
-        server.logout()  
-        return counter
+    def get_boxes(self):
+        return [box for box in self.server.list()[1]]
+        
+    def fetch_mail(self):
+        
+        def _quote(box_folder):
+            box_folder = box_folder.strip()
+            if ' ' in box_folder: box_folder = '"%s"' % box_folder
+            return box_folder
+        
+        super(ImapMailReceiver, self).fetch_mail()
+        cnt = 0
+        for folder in self.boxes:
+            status, count = self.server.select(_quote(folder))
+            
+            if status != 'OK':
+                raise MailRecieverError("Could not select Mailbox '%s'" % folder)
+            
+            status, email_ids = self.server.uid('search', None, '(SINCE "%s" NOT HEADER Subject "[Django] ERROR (EXTERNAL IP)")' % self.since_date.strftime("%d-%b-%Y"))
+            fetch_ids = email_ids[0].split()
+            
+            if len(fetch_ids) > 0:
+                status, alldata = self.server.uid('fetch', ','.join(fetch_ids), '(RFC822)')
+                
+                # clean up
+                alldata = filter(lambda a: a != ')', alldata)
+                
+                for msg_uid, full_message in alldata:                
+                    hash_value = self.get_hash(full_message)
+                    if hash_value not in self.old_hash_values:
+                        m = self.msg_klass(full_message, hash_value, msg_uid)
+                        m.save()
+                        self.old_hash_values.append(hash_value)
+                        cnt += 1
+        return cnt

@@ -7,7 +7,7 @@
 #
 
 from django.contrib import admin
-from djpostman.models import Message
+from djpostman.models import Message, EmailBox, Contact
 from django.template.response import TemplateResponse
 from django.conf.urls.defaults import *
 from djpostman.forms import MessageForm
@@ -16,12 +16,34 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 import re
 
-content_re = re.compile("<body>(?P<content>.*)</body>",re.IGNORECASE|re.MULTILINE|re.DOTALL)
+def sync_box(modeladmin, request, queryset):
+    count = 0
+    try:
+        for config in queryset.all():
+            count += config.synchronize()            
+        messages.success(request, _(u"%s Emails synchronisiert") % count)
+    except Exception, e:
+        messages.error(request, _(u"Emails konnten nicht synchronisiert werden: %s") % str(e))
+    
+sync_box.short_description = _(u"Ausgewählte Email Boxen synchronisieren")
 
+class EmailBoxAdmin(admin.ModelAdmin):
+    list_display = ('user', 'host', 'imap_folders', 'last_sync')
+    actions = [sync_box]
+    
+admin.site.register(EmailBox, EmailBoxAdmin)
+
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('email', 'first_name', 'last_name', 'user', 'emails_sent_count', 'emails_received_count')
+    search_fields = ('email', 'first_name', 'last_name', 'user__first_name', 'user__first_name')
+    
+admin.site.register(Contact, ContactAdmin)
+
+content_re = re.compile("<body>(?P<content>.*)</body>",re.IGNORECASE|re.MULTILINE|re.DOTALL)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('created', 'subject')
-    change_form_template = 'admin/djpostman/change_form.html'
-    change_list_template = 'admin/djpostman/change_list.html'
+    list_display = ('created', 'subject', 'uid')
+    change_form_template = 'admin/djpostman/message_change_form.html'
+    change_list_template = 'admin/djpostman/message_change_list.html'
 
     def get_urls(self):
         urls = super(MessageAdmin, self).get_urls()
@@ -63,7 +85,7 @@ class MessageAdmin(admin.ModelAdmin):
                                                    'user': request.user.get_full_name() or request.user},
                                           recipient_list=recipient_list)
                 
-                messages.success(request, _(u"Das Email '%s' wurde an '%s' versendet" % (subject, ','.join(recipient_list))))
+                messages.success(request, _(u"Das Email '%s' wurde an '%s' versendet") % (subject, ','.join(recipient_list)))
                 return redirect('/admin/djpostman/message/')
         else:
             form = MessageForm()

@@ -1,6 +1,7 @@
 eclipse.preferences.version=1
 encoding//djpostman/admin.py=utf-8
 encoding//djpostman/forms.py=utf-8
+encoding//djpostman/management/commands/get_mails.py=utf-8
 encoding//djpostman/models.py=utf-8
 encoding//djpostman/receiver.py=utf-8
 encoding//djpostman/sender.py=utf-8
