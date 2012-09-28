@@ -130,7 +130,7 @@ class ServerMessage(object):
             contact.save()
         
         if not contact.user and User.objects.filter(email__iexact=email).exists():
-            contact.user = User.objects.get(email__iexact=email)
+            contact.user = User.objects.filter(email__iexact=email)[0]
             contact.save()
         
         if not contact.first_name and 'first_name' in defaults:
