@@ -10,7 +10,7 @@
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from django.utils.encoding import force_unicode
+from django.utils.encoding import smart_str
 import logging
 from django.template.loader import render_to_string
 from django.contrib.sites.models import Site
@@ -58,7 +58,7 @@ def send_multi_mail(subject, content, recipient_list,
     
     if store:
         msg = Message()
-        msg.subject = force_unicode(subject)
+        msg.subject = smart_str(subject)
         msg.save()
         for u in User.objects.filter(email=from_email):
             msg.sender = u
@@ -80,8 +80,8 @@ def send_multi_mail(subject, content, recipient_list,
     h.ignore_images = True
     h.ignore_emphasis = True
     
-    email = EmailMultiAlternatives(force_unicode(subject), 
-                                   force_unicode(h.handle(strip_empty_tags(strip_tags(content, ['img', 'script', 'span'])))), 
+    email = EmailMultiAlternatives(smart_str(subject), 
+                                   smart_str(h.handle(strip_empty_tags(strip_tags(content, ['img', 'script', 'span'])))), 
                                    from_email, 
                                    recipient_list_str)
     email.attach_alternative(content, "text/html")
