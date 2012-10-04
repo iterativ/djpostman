@@ -25,7 +25,6 @@ def sync_box(modeladmin, request, queryset):
             count += config.synchronize()            
         messages.success(request, _(u"%s Emails synchronisiert") % count)
     except Exception, e:
-        raise
         logger.exception('Could not sync Email')
         messages.error(request, _(u"Emails konnten nicht synchronisiert werden: %s") % str(e))
     
