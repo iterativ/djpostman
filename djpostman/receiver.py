@@ -104,7 +104,7 @@ class ServerMessage(object):
         sender_email = sender[1]
         
         if User.objects.filter(email=sender_email).exists():
-            return User.objects.get(email=sender_email) 
+            return User.objects.filter(email=sender_email).order_by('-last_login')[0]
     
     def get_recipients(self, recipients):
         return User.objects.filter(email__in=[r[1] for r in recipients])
@@ -250,6 +250,10 @@ class ImapMailReceiver(BaseMailReceiver):
                 raise MailRecieverError("Could not select Mailbox '%s'" % folder)
             
             status, email_ids = self.server.uid('search', None, '(SINCE "%s" NOT HEADER Subject "[Django] ERROR (EXTERNAL IP)")' % self.since_date.strftime("%d-%b-%Y"))
+            
+            if status != 'OK':
+                raise MailRecieverError("Could not search Mailbox '%s' (Status: %s)" % (folder, status))
+            
             fetch_ids = email_ids[0].split()
             
             if len(fetch_ids) > 0:

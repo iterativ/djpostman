@@ -15,6 +15,8 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 import re
+import logging
+logger = logging.getLogger(__name__)
 
 def sync_box(modeladmin, request, queryset):
     count = 0
@@ -23,6 +25,8 @@ def sync_box(modeladmin, request, queryset):
             count += config.synchronize()            
         messages.success(request, _(u"%s Emails synchronisiert") % count)
     except Exception, e:
+        raise
+        logger.exception('Could not sync Email')
         messages.error(request, _(u"Emails konnten nicht synchronisiert werden: %s") % str(e))
     
 sync_box.short_description = _(u"Ausgewählte Email Boxen synchronisieren")
