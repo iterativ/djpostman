@@ -262,11 +262,14 @@ class ImapMailReceiver(BaseMailReceiver):
                 # clean up
                 alldata = filter(lambda a: a != ')', alldata)
                 
-                for msg_uid, full_message in alldata:                
-                    hash_value = self.get_hash(full_message)
-                    if hash_value not in self.old_hash_values:
-                        m = self.msg_klass(full_message, hash_value, msg_uid)
-                        m.save()
-                        self.old_hash_values.append(hash_value)
-                        cnt += 1
+                for item in alldata:
+                    # is it a valid message (not a flag)
+                    if isinstance(item, tuple):
+                        msg_uid, full_message = item
+                        hash_value = self.get_hash(full_message)
+                        if hash_value not in self.old_hash_values:
+                            m = self.msg_klass(full_message, hash_value, msg_uid)
+                            m.save()
+                            self.old_hash_values.append(hash_value)
+                            cnt += 1
         return cnt
