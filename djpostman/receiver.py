@@ -21,11 +21,12 @@ from email.Utils import parseaddr, collapse_rfc2231_value, parsedate_tz, getaddr
 import datetime
 from datetime import date, timedelta
 import hashlib
-from djpostman.models import Message, Contact
+from djpostman.models import Message
 from django.core.mail import EmailMultiAlternatives
 from djangojames.string import strip_tags, strip_empty_tags
 from django.utils.safestring import mark_safe
 from django.contrib.auth.models import User
+from djpostman.utils import get_or_create_contact
 
 class MailRecieverError(Exception):
     """Base class for exceptions in this module."""
@@ -109,38 +110,6 @@ class ServerMessage(object):
     def get_recipients(self, recipients):
         return User.objects.filter(email__in=[r[1] for r in recipients])
     
-    def get_or_create_contact(self, contact_email):
-        name, email = contact_email
-        email=email.lower()
-        defaults={}
-        if not name:
-            name = email.split('@')[0].replace('.', ' ').title()    
-        names = name.split(' ')
-        
-        if len(names) > 1:
-            defaults['first_name'] = names[0]
-            defaults['last_name'] = ' '.join(names[1:])
-        else:
-            defaults['last_name'] = names[0]
-        
-        try:
-            contact = Contact.objects.get(email__iexact=email)
-        except Contact.DoesNotExist:
-            contact = Contact(email=email)
-            contact.save()
-        
-        if not contact.user and User.objects.filter(email__iexact=email).exists():
-            contact.user = User.objects.filter(email__iexact=email)[0]
-            contact.save()
-        
-        if not contact.first_name and 'first_name' in defaults:
-            contact.first_name = defaults.get('first_name')[:100]
-        if not contact.last_name and 'last_name' in defaults:
-            contact.last_name = defaults.get('last_name')[:100]
-        contact.save()
-
-        return contact    
-    
     def save(self):            
         new_message = Message()
         new_message.subject = self.subject
@@ -162,9 +131,9 @@ class ServerMessage(object):
         new_message.sent = True
         new_message.save()
 
-        self.get_or_create_contact(self.sender).emails_sent.add(new_message)
+        get_or_create_contact(self.sender).emails_sent.add(new_message)
         for rec in self.recipients:
-            self.get_or_create_contact(rec).emails_received.add(new_message)
+            get_or_create_contact(rec).emails_received.add(new_message)
 
 class BaseMailReceiver(object):
     

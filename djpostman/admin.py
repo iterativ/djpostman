@@ -37,7 +37,7 @@ class EmailBoxAdmin(admin.ModelAdmin):
 admin.site.register(EmailBox, EmailBoxAdmin)
 
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ('email', 'first_name', 'last_name', 'user', 'emails_sent_count', 'emails_received_count')
+    list_display = ('email', 'first_name', 'last_name', 'user', 'emails_sent_count', 'emails_received_count', 'created')
     search_fields = ('email', 'first_name', 'last_name', 'user__first_name', 'user__first_name')
     
 admin.site.register(Contact, ContactAdmin)

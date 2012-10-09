@@ -6,3 +6,4 @@ encoding//djpostman/models.py=utf-8
 encoding//djpostman/receiver.py=utf-8
 encoding//djpostman/sender.py=utf-8
 encoding//djpostman/task.py=utf-8
+encoding//djpostman/utils.py=utf-8

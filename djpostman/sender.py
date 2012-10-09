@@ -19,6 +19,7 @@ from djangojames.string import strip_tags, strip_empty_tags
 from djpostman.models import Message
 from django.contrib.auth.models import User
 from djpostman.task import send_mail_task
+from djpostman.utils import get_or_create_contact
 
 logger = logging.getLogger(__name__)
 
@@ -36,17 +37,20 @@ from_email = getattr(settings, 'FROM_EMAIL', settings.EMAIL_HOST_USER)
 
 def render_to_send_multi_mail(subject, template, context, recipient_list, 
                     from_email=from_email, 
-                    store=True):
+                    store=True, names_dict=None):
 
     context['current_site'] = Site.objects.get_current()
     context['current_domain'] = getattr(settings, 'PROTOCOL', 'http://')+Site.objects.get_current().domain
         
     content = render_to_string(template, context)
-    return send_multi_mail(subject, content, recipient_list, from_email, store)
+    return send_multi_mail(subject, content, recipient_list, from_email, store, names_dict)
 
 def send_multi_mail(subject, content, recipient_list, 
                     from_email=from_email, 
-                    store=True):
+                    store=True,
+                    names_dict=None):
+    if names_dict is None:
+        names_dict = {}
 
     if not isinstance(recipient_list, list): 
         recipient_list = [recipient_list]
@@ -69,6 +73,8 @@ def send_multi_mail(subject, content, recipient_list,
         if isinstance(recipient, User):
             if store: 
                 msg.recipients.add(recipient)
+            if names_dict.has_key(recipient.email) or not names_dict[recipient.email]:
+                names_dict[recipient.email] = recipient.get_full_name()
             recipient_list_str.append(recipient.email)
         else:
             if store: 
@@ -89,6 +95,9 @@ def send_multi_mail(subject, content, recipient_list,
     if store: 
         msg.email = email
         msg.save()
+        get_or_create_contact((names_dict.get(from_email), from_email)).emails_sent.add(msg)
+        for rec in recipient_list_str:
+            get_or_create_contact((names_dict.get(rec), rec)).emails_received.add(msg)
     
     if getattr(settings, 'DJPOSTMAN_NO_EMAIL', False):
         logger.info('No mail sent: settings.DJPOSTMAN_NO_EMAIL is True')
