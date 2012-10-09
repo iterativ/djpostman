@@ -10,12 +10,20 @@
 
 from celery.task import task
 from djpostman.receiver import ImapMailReceiver
-
+import logging
+from djpostman.models import Message
+logger = logging.getLogger(__name__)
 
 @task
-def send_mail_task(msq):
-    msq.send()
-    
+def send_mail_task(msg_id):
+    try:
+        msg = Message.objects.get(id=msg_id)
+        msg.email.send()
+        msg.sent = True
+        msg.save()
+    except:
+        logger.exception('could not send email')
+
 @task(name="djpostman.fetch_mails")
 def backend_cleanup():
     mr = ImapMailReceiver()

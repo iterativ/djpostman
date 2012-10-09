@@ -23,8 +23,8 @@ def _unpickle_email(data):
 
 class Contact(TimeStampedModel):
     user = models.ForeignKey('auth.User', null=True, blank=True)
-    first_name = models.CharField(_('Vorname'), max_length=30, blank=True)
-    last_name = models.CharField(_('Nachname'), max_length=30, blank=True)
+    first_name = models.CharField(_('Vorname'), max_length=100, blank=True)
+    last_name = models.CharField(_('Nachname'), max_length=100, blank=True)
     email = models.EmailField(_('Email Addresse'), blank=True, unique=True)
     emails_sent = models.ManyToManyField('djpostman.Message', related_name='contact_emails_sent')
     emails_received = models.ManyToManyField('djpostman.Message', related_name='contact_emails_received')
@@ -46,7 +46,8 @@ class Message(TimeStampedModel):
     uid = models.CharField(max_length=255, null=True, blank=True, editable=False)
     # The actual data - a pickled EmailMessage
     message_data = models.TextField(null=True, blank=True, editable=False)
-
+    sent = models.BooleanField(_(u"Mail wurde gesendet"), default=False)
+    
     class Meta(object):
         verbose_name = _('Email')
         verbose_name_plural = _("Emails")

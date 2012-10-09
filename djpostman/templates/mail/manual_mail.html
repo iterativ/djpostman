@@ -9,7 +9,7 @@
 	{% if use_greeting %}
 		<p>
 			{% trans "Freundliche Grüsse" %}<br>
-			{{ user }}
+			{{ user }}, {{ current_site.name }}
 		</p>
 	{% endif %}
 {% endblock %}

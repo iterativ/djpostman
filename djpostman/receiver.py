@@ -134,9 +134,9 @@ class ServerMessage(object):
             contact.save()
         
         if not contact.first_name and 'first_name' in defaults:
-            contact.first_name = defaults.get('first_name')
+            contact.first_name = defaults.get('first_name')[:100]
         if not contact.last_name and 'last_name' in defaults:
-            contact.last_name = defaults.get('last_name')
+            contact.last_name = defaults.get('last_name')[:100]
         contact.save()
 
         return contact    
@@ -159,6 +159,7 @@ class ServerMessage(object):
         new_message.save()        
         new_message.recipients = self.get_recipients(self.recipients)
         new_message.created = self.received
+        new_message.sent = True
         new_message.save()
 
         self.get_or_create_contact(self.sender).emails_sent.add(new_message)

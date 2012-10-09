@@ -44,7 +44,10 @@ admin.site.register(Contact, ContactAdmin)
 
 content_re = re.compile("<body>(?P<content>.*)</body>",re.IGNORECASE|re.MULTILINE|re.DOTALL)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('created', 'subject', 'uid')
+    list_display = ('created', 'subject', 'uid', 'sent')
+    search_fields = ('subject', 'uid')
+    list_filter = ('sent',)
+    
     change_form_template = 'admin/djpostman/message_change_form.html'
     change_list_template = 'admin/djpostman/message_change_list.html'
 

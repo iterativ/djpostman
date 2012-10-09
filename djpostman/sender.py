@@ -96,11 +96,11 @@ def send_multi_mail(subject, content, recipient_list,
     
     if 'djcelery' in settings.INSTALLED_APPS and hasattr(settings, 'BROKER_URL'):
         try:
-            send_mail_task.delay(email)
+            send_mail_task.delay(msg.id)
         except:
             logger.exception('Could not use djcelery. Try fallback.')
-            send_mail_task(email)
+            send_mail_task(msg.id)
     else:
-        send_mail_task(email)
+        send_mail_task(msg.id)
     
     return 1
