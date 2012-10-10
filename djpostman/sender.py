@@ -88,6 +88,8 @@ def send_multi_mail(subject, content, recipient_list,
     h.ignore_images = True
     h.ignore_emphasis = True
     
+    recipient_list_str = list(set(recipient_list_str))
+    
     email = EmailMultiAlternatives(smart_str(subject), 
                                    smart_str(h.handle(force_unicode(strip_empty_tags(strip_tags(content, ['img', 'script', 'span']))))), 
                                    from_email, 
