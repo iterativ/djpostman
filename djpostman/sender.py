@@ -46,8 +46,7 @@ def render_to_send_multi_mail(subject, template, context, recipient_list,
     return send_multi_mail(subject, content, recipient_list, from_email, store, names_dict)
 
 def send_multi_mail(subject, content, recipient_list, 
-                    from_email=from_email, 
-                    store=True,
+                    from_email=from_email,
                     names_dict=None):
     
     def _add_name_dict(user):
@@ -65,28 +64,25 @@ def send_multi_mail(subject, content, recipient_list,
     
     recipient_list = list(set(recipient_list))
     
-    if store:
-        msg = Message()
-        msg.subject = smart_str(subject)
-        msg.save()
-        for u in User.objects.filter(email=from_email):
-            msg.sender = u
-            _add_name_dict(u)
+    msg = Message()
+    msg.subject = smart_str(subject)
+    msg.save()
+    for u in User.objects.filter(email=from_email):
+        msg.sender = u
+        _add_name_dict(u)
         
     recipient_list_str = []
     
     for recipient in recipient_list:
         if isinstance(recipient, User):
-            if store: 
-                msg.recipients.add(recipient)
+            msg.recipients.add(recipient)
             _add_name_dict(recipient)
 
             recipient_list_str.append(recipient.email)
         else:
-            if store: 
-                for u in User.objects.filter(email=recipient):
-                    _add_name_dict(u)
-                    msg.recipients.add(u)
+            for u in User.objects.filter(email=recipient):
+                _add_name_dict(u)
+                msg.recipients.add(u)
             recipient_list_str.append(recipient)
 
     h = HTML2Text()
@@ -98,13 +94,12 @@ def send_multi_mail(subject, content, recipient_list,
                                    from_email, 
                                    recipient_list_str)
     email.attach_alternative(content, "text/html")
-    
-    if store: 
-        msg.email = email
-        msg.save()
-        get_or_create_contact((names_dict.get(from_email), from_email)).emails_sent.add(msg)
-        for rec in recipient_list_str:
-            get_or_create_contact((names_dict.get(rec), rec)).emails_received.add(msg)
+
+    msg.email = email
+    msg.save()
+    get_or_create_contact((names_dict.get(from_email), from_email)).emails_sent.add(msg)
+    for rec in recipient_list_str:
+        get_or_create_contact((names_dict.get(rec), rec)).emails_received.add(msg)
     
     send(msg)
     

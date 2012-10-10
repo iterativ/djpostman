@@ -54,7 +54,10 @@ class Message(TimeStampedModel):
         ordering = ['-created']
     
     def _get_email(self):
-        return _unpickle_email(self.message_data)
+        try:
+            return _unpickle_email(self.message_data)
+        except:
+            return '(email not readable)'
     
     def _set_email(self, val):
         self.message_data = _pickle_email(val)
