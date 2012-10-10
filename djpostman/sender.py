@@ -88,9 +88,7 @@ def send_multi_mail(subject, content, recipient_list,
                     _add_name_dict(u)
                     msg.recipients.add(u)
             recipient_list_str.append(recipient)
-    
-    print names_dict
-    
+
     h = HTML2Text()
     h.ignore_images = True
     h.ignore_emphasis = True
