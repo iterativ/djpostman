@@ -11,6 +11,10 @@
 from djpostman.models import Contact
 from django.contrib.auth.models import User
 from email.Utils import parseaddr
+import logging
+
+logger = logging.getLogger(__name__)
+from django.conf import settings
 
 def extract_name(email):
     name, email = parseaddr(email)
@@ -60,4 +64,4 @@ def get_or_create_contact(contact_email):
         contact.last_name = defaults.get('last_name')[:100]
     contact.save()
 
-    return contact    
+    return contact

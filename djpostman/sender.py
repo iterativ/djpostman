@@ -18,8 +18,8 @@ from html2text import HTML2Text
 from djangojames.string import strip_tags, strip_empty_tags
 from djpostman.models import Message
 from django.contrib.auth.models import User
-from djpostman.task import send_mail_task
 from djpostman.utils import get_or_create_contact
+from djpostman.task import send_mail_task
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,11 @@ def send_multi_mail(subject, content, recipient_list,
                     from_email=from_email, 
                     store=True,
                     names_dict=None):
+    
+    def _add_name_dict(user):
+        if not names_dict.get(user.email, None):
+            names_dict[user.email] = user.get_full_name()        
+    
     if names_dict is None:
         names_dict = {}
 
@@ -66,6 +71,7 @@ def send_multi_mail(subject, content, recipient_list,
         msg.save()
         for u in User.objects.filter(email=from_email):
             msg.sender = u
+            _add_name_dict(u)
         
     recipient_list_str = []
     
@@ -73,14 +79,17 @@ def send_multi_mail(subject, content, recipient_list,
         if isinstance(recipient, User):
             if store: 
                 msg.recipients.add(recipient)
-            if names_dict.has_key(recipient.email) or not names_dict[recipient.email]:
-                names_dict[recipient.email] = recipient.get_full_name()
+            _add_name_dict(recipient)
+
             recipient_list_str.append(recipient.email)
         else:
             if store: 
                 for u in User.objects.filter(email=recipient):
+                    _add_name_dict(u)
                     msg.recipients.add(u)
             recipient_list_str.append(recipient)
+    
+    print names_dict
     
     h = HTML2Text()
     h.ignore_images = True
@@ -99,6 +108,12 @@ def send_multi_mail(subject, content, recipient_list,
         for rec in recipient_list_str:
             get_or_create_contact((names_dict.get(rec), rec)).emails_received.add(msg)
     
+    send(msg)
+    
+    return 1
+
+def send(msg):
+    
     if getattr(settings, 'DJPOSTMAN_NO_EMAIL', False):
         logger.info('No mail sent: settings.DJPOSTMAN_NO_EMAIL is True')
         return 0
@@ -111,5 +126,3 @@ def send_multi_mail(subject, content, recipient_list,
             send_mail_task(msg.id)
     else:
         send_mail_task(msg.id)
-    
-    return 1

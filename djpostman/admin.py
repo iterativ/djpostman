@@ -16,6 +16,7 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 import re
 import logging
+from djpostman.sender import send
 logger = logging.getLogger(__name__)
 
 def sync_box(modeladmin, request, queryset):
@@ -42,11 +43,22 @@ class ContactAdmin(admin.ModelAdmin):
     
 admin.site.register(Contact, ContactAdmin)
 
+def resend(modeladmin, request, queryset):
+    try:
+        for msg in queryset:
+            send(msg)
+        messages.success(request, _(u"%s Emails gesendet") % len(queryset))
+    except Exception, e:
+        logger.exception('Could not resend email')
+        messages.error(request, _(u"Emails konnten nicht gesendet werden: %s") % str(e))
+resend.short_description = _(u"Ausgewählte Emails nocheinmal senden")
+
 content_re = re.compile("<body>(?P<content>.*)</body>",re.IGNORECASE|re.MULTILINE|re.DOTALL)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('created', 'subject', 'uid', 'sent')
     search_fields = ('subject', 'uid')
     list_filter = ('sent',)
+    actions = [resend]
     
     change_form_template = 'admin/djpostman/message_change_form.html'
     change_list_template = 'admin/djpostman/message_change_list.html'
