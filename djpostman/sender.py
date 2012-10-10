@@ -36,14 +36,13 @@ logger = logging.getLogger(__name__)
 from_email = getattr(settings, 'FROM_EMAIL', settings.EMAIL_HOST_USER)
 
 def render_to_send_multi_mail(subject, template, context, recipient_list, 
-                    from_email=from_email, 
-                    store=True, names_dict=None):
+                    from_email=from_email, names_dict=None):
 
     context['current_site'] = Site.objects.get_current()
     context['current_domain'] = getattr(settings, 'PROTOCOL', 'http://')+Site.objects.get_current().domain
         
     content = render_to_string(template, context)
-    return send_multi_mail(subject, content, recipient_list, from_email, store, names_dict)
+    return send_multi_mail(subject, content, recipient_list, from_email, names_dict)
 
 def send_multi_mail(subject, content, recipient_list, 
                     from_email=from_email,

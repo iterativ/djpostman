@@ -37,7 +37,7 @@ for scheme in INSTALL_SCHEMES.values():
 
 setup(
     name='djpostman',
-    version='0.4.15',
+    version='0.4.16',
     description="a asynchron mail agent",
     author='Marcel Eyer',
     author_email='marcel.eyer@iterativ.ch',
