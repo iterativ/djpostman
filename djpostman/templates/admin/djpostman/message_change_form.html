@@ -17,7 +17,16 @@
 			<div class="form-row">
 				<label class="required">{% trans "Email To" %}:</label> {{email.to|join:', ' }}
 			</div>
-			
+            {% if email.cc %}
+            <div class="form-row">
+                <label class="required">{% trans "Email Cc" %}:</label> {{email.cc|join:', ' }}
+            </div>
+            {% endif %}
+            {% if email.bcc %}
+            <div class="form-row">
+                <label class="required">{% trans "Email Bcc (not visible)" %}:</label> {{email.bcc|join:', ' }}
+            </div>
+            {% endif %}
 			<div class="form-row">
 				<label class="required">{% trans "Email from" %}:</label> 
 				{% if original.sender %}
