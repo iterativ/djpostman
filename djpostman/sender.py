@@ -89,11 +89,21 @@ def send_multi_mail(subject, content, recipient_list,
     h.ignore_emphasis = True
     
     recipient_list_str = list(set(recipient_list_str))
-    
-    email = EmailMultiAlternatives(smart_str(subject), 
-                                   smart_str(h.handle(force_unicode(strip_empty_tags(strip_tags(content, ['img', 'script', 'span']))))), 
-                                   from_email, 
-                                   recipient_list_str)
+
+    args = [smart_str(subject),
+            smart_str(h.handle(force_unicode(strip_empty_tags(strip_tags(content, ['img', 'script', 'span']))))),
+            from_email
+    ]
+    kwargs = {}
+    if len(recipient_list_str) > 1:
+        kwargs['to']=[from_email]
+        kwargs['bcc']=recipient_list_str
+    else:
+        kwargs['to']=recipient_list_str
+
+    print kwargs
+
+    email = EmailMultiAlternatives(*args, **kwargs)
     email.attach_alternative(content, "text/html")
 
     msg.email = email

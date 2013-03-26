@@ -37,7 +37,7 @@ for scheme in INSTALL_SCHEMES.values():
 
 setup(
     name='djpostman',
-    version='0.4.16',
+    version='0.4.17',
     description="a asynchron mail agent",
     author='Marcel Eyer',
     author_email='marcel.eyer@iterativ.ch',
@@ -50,6 +50,7 @@ setup(
         'html2text==3.200.3',
         'Celery==3.0.9',
         'django-celery==3.0.9',
+        'textile==2.1.5',
         'kombu==2.4.0' # http://stackoverflow.com/questions/12115692/celery-error-no-such-transport-amqp
     ],
     dependency_links = [
