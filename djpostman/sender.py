@@ -101,8 +101,6 @@ def send_multi_mail(subject, content, recipient_list,
     else:
         kwargs['to']=recipient_list_str
 
-    print kwargs
-
     email = EmailMultiAlternatives(*args, **kwargs)
     email.attach_alternative(content, "text/html")
 
