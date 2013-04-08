@@ -35,43 +35,44 @@ logger = logging.getLogger(__name__)
 
 from_email = getattr(settings, 'FROM_EMAIL', settings.EMAIL_HOST_USER)
 
-def render_to_send_multi_mail(subject, template, context, recipient_list, 
-                    from_email=from_email, names_dict=None):
 
+def render_to_send_multi_mail(subject, template, context, recipient_list,
+                              from_email=from_email, names_dict=None):
     context['current_site'] = Site.objects.get_current()
-    context['current_domain'] = getattr(settings, 'PROTOCOL', 'http://')+Site.objects.get_current().domain
-        
+    context['current_domain'] = getattr(settings, 'PROTOCOL', 'http://') + Site.objects.get_current().domain
+
     content = render_to_string(template, context)
     return send_multi_mail(subject, content, recipient_list, from_email, names_dict)
 
-def send_multi_mail(subject, content, recipient_list, 
+
+def send_multi_mail(subject, content, recipient_list,
                     from_email=from_email,
-                    names_dict=None):
-    
+                    names_dict=None,
+                    ignore_celery=False):
     def _add_name_dict(user):
         if not names_dict.get(user.email, None):
-            names_dict[user.email] = user.get_full_name()        
-    
+            names_dict[user.email] = user.get_full_name()
+
     if names_dict is None:
         names_dict = {}
 
-    if not isinstance(recipient_list, list): 
+    if not isinstance(recipient_list, list):
         recipient_list = [recipient_list]
-    
+
     if len(recipient_list) == 0:
         return 0
-    
+
     recipient_list = list(set(recipient_list))
-    
+
     msg = Message()
     msg.subject = smart_str(subject)
     msg.save()
     for u in User.objects.filter(email=from_email):
         msg.sender = u
         _add_name_dict(u)
-        
+
     recipient_list_str = []
-    
+
     for recipient in recipient_list:
         if isinstance(recipient, User):
             msg.recipients.add(recipient)
@@ -87,7 +88,7 @@ def send_multi_mail(subject, content, recipient_list,
     h = HTML2Text()
     h.ignore_images = True
     h.ignore_emphasis = True
-    
+
     recipient_list_str = list(set(recipient_list_str))
 
     args = [smart_str(subject),
@@ -96,10 +97,10 @@ def send_multi_mail(subject, content, recipient_list,
     ]
     kwargs = {}
     if len(recipient_list_str) > 1:
-        kwargs['to']=[from_email]
-        kwargs['bcc']=recipient_list_str
+        kwargs['to'] = [from_email]
+        kwargs['bcc'] = recipient_list_str
     else:
-        kwargs['to']=recipient_list_str
+        kwargs['to'] = recipient_list_str
 
     email = EmailMultiAlternatives(*args, **kwargs)
     email.attach_alternative(content, "text/html")
@@ -109,18 +110,18 @@ def send_multi_mail(subject, content, recipient_list,
     get_or_create_contact((names_dict.get(from_email), from_email)).emails_sent.add(msg)
     for rec in recipient_list_str:
         get_or_create_contact((names_dict.get(rec), rec)).emails_received.add(msg)
-    
-    send(msg)
-    
+
+    send(msg, ignore_celery)
+
     return 1
 
-def send(msg):
-    
+
+def send(msg, ignore_celery=False):
     if getattr(settings, 'DJPOSTMAN_NO_EMAIL', False):
         logger.info('No mail sent: settings.DJPOSTMAN_NO_EMAIL is True')
         return 0
-    
-    if 'djcelery' in settings.INSTALLED_APPS and hasattr(settings, 'BROKER_URL'):
+
+    if 'djcelery' in settings.INSTALLED_APPS and hasattr(settings, 'BROKER_URL') and not ignore_celery:
         try:
             send_mail_task.delay(msg.id)
         except:
