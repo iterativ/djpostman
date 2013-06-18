@@ -14,6 +14,7 @@ from django_extensions.db.models import TimeStampedModel
 import base64
 import pickle
 from datetime import date
+from django.conf import settings
 
 def _pickle_email(email):
     return base64.encodestring(pickle.dumps(email))
@@ -22,7 +23,7 @@ def _unpickle_email(data):
     return pickle.loads(base64.decodestring(data))
 
 class Contact(TimeStampedModel):
-    user = models.ForeignKey('auth.User', null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
     first_name = models.CharField(_('Vorname'), max_length=100, blank=True)
     last_name = models.CharField(_('Nachname'), max_length=100, blank=True)
     email = models.EmailField(_('Email Addresse'), blank=True, unique=True)
@@ -39,8 +40,8 @@ class Contact(TimeStampedModel):
         return self.emails_received.count()
 
 class Message(TimeStampedModel):
-    sender = models.ForeignKey('auth.User', null=True, blank=True)
-    recipients = models.ManyToManyField('auth.User', related_name='user_messages', null=True, blank=True)
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    recipients = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='user_messages', null=True, blank=True)
     subject= models.TextField()
     hash_value = models.CharField(max_length=255, null=True, blank=True, editable=False)
     uid = models.CharField(max_length=255, null=True, blank=True, editable=False)
