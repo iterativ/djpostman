@@ -8,6 +8,7 @@
 # Created on Mar 19, 2012
 # @author: github.com/maersu
 
+import django
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
