@@ -49,7 +49,7 @@ setup(
         'django-extensions==0.9',
         'html2text==3.200.3',
         'Celery==3.0.24',
-        'django-celery==3.0.24',
+        'django-celery==3.1.10',
         'textile==2.1.5',
         #'kombu==2.5.16' # http://stackoverflow.com/questions/12115692/celery-error-no-such-transport-amqp
     ],
