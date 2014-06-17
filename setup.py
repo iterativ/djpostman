@@ -35,9 +35,10 @@ for dirpath, dirnames, filenames in os.walk(root_dir):
 for scheme in INSTALL_SCHEMES.values():
     scheme['data'] = scheme['purelib']
 
+# the celery dependencies are pretty fucked up, here is what I found out by trial and error
 setup(
     name='djpostman',
-    version='0.5.4',
+    version='0.5.5',
     description="a asynchron mail agent",
     author='Marcel Eyer',
     author_email='marcel.eyer@iterativ.ch',
@@ -48,12 +49,10 @@ setup(
     install_requires=[
         'django-extensions==0.9',
         'html2text==3.200.3',
-        # the celery dependencies are pretty fucked up, here is what I found out by trial and error
         'Celery==3.0.12', # any bigger version than 3.0.12 leads to an unstartable celery service...
         'billiard==2.7.3.34', # must be smaller than 3, but celery will happily install any newer version...
         'django-celery==3.1.10',
-        # kombu is a dependency of celery
-        'kombu==2.5.16' # http://stackoverflow.com/questions/12115692/celery-error-no-such-transport-amqp
+        'kombu==2.5.16', # http://stackoverflow.com/questions/12115692/celery-error-no-such-transport-amqp
         'textile==2.1.5',
     ],
     dependency_links = [
